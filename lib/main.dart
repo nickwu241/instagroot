@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:outline_material_icons/outline_material_icons.dart';
 import 'package:instagroot/models.dart';
 import 'package:instagroot/post_widget.dart';
+import 'package:instagroot/ui_utils.dart';
 
 void main() => runApp(MyApp());
 
@@ -57,16 +58,20 @@ class _MainScaffoldState extends State<MainScaffold> {
           ],
         ),
         actions: <Widget>[
-          IconButton(
-            color: Colors.black,
-            icon: Icon(OMIcons.liveTv),
-            onPressed: () {},
-          ),
-          IconButton(
-            color: Colors.black,
-            icon: Icon(OMIcons.nearMe),
-            onPressed: () {},
-          )
+          Builder(builder: (BuildContext context) {
+            return IconButton(
+              color: Colors.black,
+              icon: Icon(OMIcons.liveTv),
+              onPressed: () => showSnackbar(context, 'Live TV'),
+            );
+          }),
+          Builder(builder: (BuildContext context) {
+            return IconButton(
+              color: Colors.black,
+              icon: Icon(OMIcons.nearMe),
+              onPressed: () => showSnackbar(context, 'My Messages'),
+            );
+          }),
         ],
       ),
       body: _buildBody(),
@@ -98,7 +103,7 @@ class HomeFeedPage extends StatefulWidget {
 class _HomeFeedPageState extends State<HomeFeedPage> {
   final _posts = <Post>[
     Post(
-      user: User(name: 'nickwu241', imageUrl: 'assets/images/nickwu241.jpg'),
+      user: grootlover,
       imageUrls: [
         'assets/images/groot1.jpg',
         'assets/images/groot4.jpg',
@@ -108,16 +113,21 @@ class _HomeFeedPageState extends State<HomeFeedPage> {
       postedAt: DateTime(2019, 5, 4, 12, 35, 0),
     ),
     Post(
-      user: User(name: 'nickwu241', imageUrl: 'assets/images/nickwu241.jpg'),
+      user: nickwu241,
       imageUrls: ['assets/images/groot2.jpg'],
       location: 'Knowhere',
       postedAt: DateTime(2019, 5, 3, 6, 0, 0),
     ),
     Post(
-      user: User(name: 'nickwu241', imageUrl: 'assets/images/nickwu241.jpg'),
+      user: grootlover,
       imageUrls: ['assets/images/groot6.jpg'],
       location: 'Nine Realms',
       postedAt: DateTime(2019, 5, 2, 0, 0, 0),
+    ),
+    Post(
+      user: nickwu241,
+      imageUrls: ['assets/images/groot3.jpg'],
+      postedAt: DateTime(2019, 2, 2, 0, 0, 0),
     ),
   ];
 
