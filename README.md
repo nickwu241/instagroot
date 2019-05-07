@@ -8,4 +8,4 @@ Instagram clone for Groot created using Flutter! I'm currently working on this w
 
 ## Picture Credits
 
-Groot pictures taken from [Pixabay](https://pixabay.com/images/search/groot/).
+Groot pictures taken from [Pixabay](https://pixabay.com/images/search/groot/) and [Pexels](https://www.pexels.com/search/groot/).
