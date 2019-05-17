@@ -13,6 +13,7 @@ class MyApp extends StatelessWidget {
       title: 'Instagroot',
       theme: ThemeData(
         primarySwatch: Colors.blueGrey,
+        primaryColor: Colors.black,
       ),
       home: MainScaffold(),
     );
@@ -27,17 +28,77 @@ class MainScaffold extends StatefulWidget {
 class _MainScaffoldState extends State<MainScaffold> {
   int _tabSelectedIndex = 0;
 
+  // Save the home page scrolling offset,
+  // used when navigating back to the home page from another tab.
+  double _lastFeedScrollOffset = 0;
+  ScrollController _scrollController;
+
+  @override
+  void dispose() {
+    _disposeScrollController();
+    super.dispose();
+  }
+
+  void _scrollToTop() {
+    if (_scrollController == null) {
+      return;
+    }
+    _scrollController.animateTo(
+      0.0,
+      duration: Duration(milliseconds: 250),
+      curve: Curves.decelerate,
+    );
+  }
+
+  // Call this when changing the body that doesn't use a ScrollController.
+  void _disposeScrollController() {
+    if (_scrollController != null) {
+      _lastFeedScrollOffset = _scrollController.offset;
+      _scrollController.dispose();
+      _scrollController = null;
+    }
+  }
+
   void _onTabTapped(int index) {
     setState(() => _tabSelectedIndex = index);
+    if (index == _tabSelectedIndex) {
+      _scrollToTop();
+    }
   }
 
   Widget _buildBody() {
     switch (_tabSelectedIndex) {
       case 0:
-        return HomeFeedPage();
+        _scrollController =
+            ScrollController(initialScrollOffset: _lastFeedScrollOffset);
+        return HomeFeedPage(scrollController: _scrollController);
       default:
+        _disposeScrollController();
         return Placeholder();
     }
+  }
+
+  // Unselected tabs are outline icons, while the selected tab should be solid.
+  List<BottomNavigationBarItem> _buildBottomNavigationItems() {
+    const unselectedIcons = <IconData>[
+      OMIcons.home,
+      Icons.search,
+      OMIcons.addBox,
+      Icons.favorite_border,
+      Icons.person_outline,
+    ];
+    const selecteedIcons = <IconData>[
+      Icons.home,
+      Icons.search,
+      Icons.add_box,
+      Icons.favorite,
+      Icons.person,
+    ];
+    return List.generate(5, (int i) {
+      final iconData =
+          _tabSelectedIndex == i ? selecteedIcons[i] : unselectedIcons[i];
+      return BottomNavigationBarItem(icon: Icon(iconData), title: Container());
+    }).toList();
   }
 
   @override
@@ -45,15 +106,20 @@ class _MainScaffoldState extends State<MainScaffold> {
     return Scaffold(
       appBar: AppBar(
         elevation: 1.0,
-        backgroundColor: Colors.grey[100],
+        backgroundColor: Colors.grey[50],
         title: Row(
           children: <Widget>[
             Icon(OMIcons.cameraAlt, color: Colors.black, size: 32.0),
-            Container(width: 12.0),
-            Text(
-              'Instagroot',
-              style: TextStyle(
-                  fontFamily: 'Billabong', color: Colors.black, fontSize: 32.0),
+            SizedBox(width: 12.0),
+            GestureDetector(
+              child: Text(
+                'Instagroot',
+                style: TextStyle(
+                    fontFamily: 'Billabong',
+                    color: Colors.black,
+                    fontSize: 32.0),
+              ),
+              onTap: _scrollToTop,
             ),
           ],
         ),
@@ -78,16 +144,7 @@ class _MainScaffoldState extends State<MainScaffold> {
       bottomNavigationBar: BottomNavigationBar(
         iconSize: 32.0,
         type: BottomNavigationBarType.fixed,
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(OMIcons.home), title: Container()),
-          BottomNavigationBarItem(icon: Icon(Icons.search), title: Container()),
-          BottomNavigationBarItem(
-              icon: Icon(OMIcons.addBox), title: Container()),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_border), title: Container()),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline), title: Container()),
-        ],
+        items: _buildBottomNavigationItems(),
         currentIndex: _tabSelectedIndex,
         onTap: _onTabTapped,
       ),
@@ -96,6 +153,10 @@ class _MainScaffoldState extends State<MainScaffold> {
 }
 
 class HomeFeedPage extends StatefulWidget {
+  final ScrollController scrollController;
+
+  HomeFeedPage({this.scrollController});
+
   @override
   _HomeFeedPageState createState() => _HomeFeedPageState();
 }
@@ -138,6 +199,7 @@ class _HomeFeedPageState extends State<HomeFeedPage> {
         return PostWidget(_posts[i]);
       },
       itemCount: _posts.length,
+      controller: widget.scrollController,
     );
   }
 }
