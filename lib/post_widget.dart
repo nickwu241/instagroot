@@ -168,7 +168,7 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
               onPressed: _showAddCommentModal,
             ),
             IconButton(
-              icon: Icon(OMIcons.share),
+              icon: Icon(OMIcons.nearMe),
               onPressed: () => showSnackbar(context, 'Share'),
             ),
             Spacer(),
