@@ -1,7 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:instagroot/heart_icon_animator.dart';
+import 'package:instagroot/heart_overlay_animator.dart';
 import 'package:outline_material_icons/outline_material_icons.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:instagroot/models.dart';
+import 'package:instagroot/avatar_widget.dart';
+import 'package:instagroot/comment_widget.dart';
 import 'package:instagroot/ui_utils.dart';
 
 class PostWidget extends StatefulWidget {
@@ -13,52 +19,15 @@ class PostWidget extends StatefulWidget {
   _PostWidgetState createState() => _PostWidgetState();
 }
 
-class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
-  AnimationController _likeController;
-  AnimationController _likeOnImageController;
-  Animation<double> _likeAnimation;
-  Animation<double> _likeOnImageAnimation;
-  bool _isLiked = false;
+class _PostWidgetState extends State<PostWidget> {
+  final StreamController<void> _doubleTapImageEvents =
+      StreamController.broadcast();
   bool _isSaved = false;
   int _currentImageIndex = 0;
 
   @override
-  void initState() {
-    super.initState();
-    final quick = const Duration(milliseconds: 500);
-    final scaleTween = Tween(begin: 0.0, end: 1.0);
-    _likeController = AnimationController(duration: quick, vsync: this);
-    _likeOnImageController = AnimationController(duration: quick, vsync: this);
-    _likeAnimation = scaleTween.animate(
-      CurvedAnimation(
-        parent: _likeController,
-        curve: Curves.elasticOut,
-      ),
-    );
-    _likeOnImageAnimation = scaleTween.animate(
-      CurvedAnimation(
-        parent: _likeOnImageController,
-        curve: Curves.elasticOut,
-      ),
-    );
-    _likeOnImageController.addStatusListener((AnimationStatus status) {
-      if (status == AnimationStatus.completed) {
-        _likeOnImageController.animateTo(
-          0.0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.decelerate,
-        );
-      }
-    });
-
-    // Ensure a full scale like button on init.
-    _likeController.animateTo(1.0, duration: Duration.zero);
-  }
-
-  @override
   void dispose() {
-    _likeController.dispose();
-    _likeOnImageController.dispose();
+    _doubleTapImageEvents.close();
     super.dispose();
   }
 
@@ -67,20 +36,12 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
   }
 
   void _onDoubleTapLikePhoto() {
-    setState(() => _isLiked = true);
-    _likeController
-      ..reset()
-      ..forward();
-    _likeOnImageController
-      ..reset()
-      ..forward();
+    setState(() => widget.post.addLikeIfUnlikedFor(currentUser));
+    _doubleTapImageEvents.sink.add(null);
   }
 
   void _toggleIsLiked() {
-    setState(() => _isLiked = !_isLiked);
-    _likeController
-      ..reset()
-      ..forward();
+    setState(() => widget.post.toggleLikeFor(currentUser));
   }
 
   void _toggleIsSaved() {
@@ -94,9 +55,19 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
         return Padding(
           padding:
               EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: AddCommentWidget(
+          child: AddCommentModal(
             user: currentUser,
-            onPost: () => Navigator.pop(context),
+            onPost: (String text) {
+              setState(() {
+                widget.post.comments.add(Comment(
+                  text: text,
+                  user: currentUser,
+                  commentedAt: DateTime.now(),
+                  likes: [],
+                ));
+              });
+              Navigator.pop(context);
+            },
           ),
         );
       },
@@ -110,15 +81,12 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
         // User Details
         Row(
           children: <Widget>[
-            AvatarWidget(imageUrl: widget.post.user.imageUrl),
+            AvatarWidget(user: widget.post.user),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(widget.post.user.name,
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                widget.post.location != null
-                    ? Text(widget.post.location)
-                    : Container(),
+                Text(widget.post.user.name, style: bold),
+                if (widget.post.location != null) Text(widget.post.location)
               ],
             ),
             Spacer(),
@@ -145,7 +113,8 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
                 enableInfiniteScroll: false,
                 onPageChanged: _updateImageIndex,
               ),
-              AnimatedBigHeart(animation: _likeOnImageAnimation),
+              HeartOverlayAnimator(
+                  triggerAnimationStream: _doubleTapImageEvents.stream),
             ],
           ),
           onDoubleTap: _onDoubleTapLikePhoto,
@@ -154,86 +123,99 @@ class _PostWidgetState extends State<PostWidget> with TickerProviderStateMixin {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            ScaleTransition(
-              scale: _likeAnimation,
-              child: IconButton(
-                icon: _isLiked
-                    ? Icon(Icons.favorite, color: Colors.red)
-                    : Icon(Icons.favorite_border),
-                onPressed: _toggleIsLiked,
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: HeartIconAnimator(
+                isLiked: widget.post.isLikedBy(currentUser),
+                size: 28.0,
+                onTap: _toggleIsLiked,
+                triggerAnimationStream: _doubleTapImageEvents.stream,
               ),
             ),
             IconButton(
+              padding: EdgeInsets.zero,
+              iconSize: 28.0,
               icon: Icon(Icons.chat_bubble_outline),
               onPressed: _showAddCommentModal,
             ),
             IconButton(
+              padding: EdgeInsets.zero,
+              iconSize: 28.0,
               icon: Icon(OMIcons.nearMe),
               onPressed: () => showSnackbar(context, 'Share'),
             ),
             Spacer(),
-            widget.post.imageUrls.length <= 1
-                ? Container()
-                : PhotoCarouselIndicator(
-                    photoCount: widget.post.imageUrls.length,
-                    activePhotoIndex: _currentImageIndex,
-                  ),
+            if (widget.post.imageUrls.length > 1)
+              PhotoCarouselIndicator(
+                photoCount: widget.post.imageUrls.length,
+                activePhotoIndex: _currentImageIndex,
+              ),
             Spacer(),
             Spacer(),
             IconButton(
+              padding: EdgeInsets.zero,
+              iconSize: 28.0,
               icon:
                   _isSaved ? Icon(Icons.bookmark) : Icon(Icons.bookmark_border),
               onPressed: _toggleIsSaved,
             )
           ],
         ),
-        Row(
-          children: <Widget>[],
-        ),
-        // Liked by
         Padding(
-          padding: const EdgeInsets.only(left: 8.0),
-          child: _isLiked
-              ? Row(
-                  children: <Widget>[
-                    Text('Liked by '),
-                    Text(
-                      currentUser.name,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    )
-                  ],
-                )
-              : Container(),
-        ),
-        // Comments
-        Row(
-          children: <Widget>[],
-        ),
-        // Add a comment...
-        Row(
-          children: <Widget>[
-            AvatarWidget(imageUrl: currentUser.imageUrl),
-            GestureDetector(
-              child: Text(
-                'Add a comment...',
-                style: TextStyle(color: Colors.grey),
+          padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              // Liked by
+              if (widget.post.likes.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: Row(
+                    children: <Widget>[
+                      Text('Liked by '),
+                      Text(widget.post.likes[0].user.name, style: bold),
+                      if (widget.post.likes.length > 1) ...[
+                        Text(' and'),
+                        Text(' ${widget.post.likes.length - 1} others',
+                            style: bold),
+                      ]
+                    ],
+                  ),
+                ),
+              // Comments
+              if (widget.post.comments.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4.0),
+                  child: Column(
+                    children: widget.post.comments
+                        .map((Comment c) => CommentWidget(c))
+                        .toList(),
+                  ),
+                ),
+              // Add a comment...
+              Row(
+                children: <Widget>[
+                  AvatarWidget(
+                    user: currentUser,
+                    padding: EdgeInsets.only(right: 8.0),
+                  ),
+                  GestureDetector(
+                    child: Text(
+                      'Add a comment...',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    onTap: _showAddCommentModal,
+                  ),
+                ],
               ),
-              onTap: _showAddCommentModal,
-            ),
-          ],
-        ),
-        // Posted Timestamp
-        Row(
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0, left: 8.0),
-              child: Text(
+              // Posted Timestamp
+              Text(
                 widget.post.timeAgo(),
                 style: TextStyle(color: Colors.grey, fontSize: 11.0),
               ),
-            ),
-          ],
-        )
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -274,50 +256,17 @@ class PhotoCarouselIndicator extends StatelessWidget {
   }
 }
 
-class AnimatedBigHeart extends AnimatedWidget {
-  AnimatedBigHeart({Key key, Animation<double> animation})
-      : super(key: key, listenable: animation);
-
-  Widget build(BuildContext context) {
-    return ScaleTransition(
-      scale: listenable,
-      child: Icon(
-        Icons.favorite,
-        size: 80.0,
-        color: Colors.white70,
-      ),
-    );
-  }
-}
-
-class AvatarWidget extends StatelessWidget {
-  String imageUrl;
-
-  AvatarWidget({@required this.imageUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: CircleAvatar(
-        backgroundImage: AssetImage(imageUrl),
-        radius: 16.0,
-      ),
-    );
-  }
-}
-
-class AddCommentWidget extends StatefulWidget {
+class AddCommentModal extends StatefulWidget {
   final User user;
-  final VoidCallback onPost;
+  final ValueChanged<String> onPost;
 
-  AddCommentWidget({@required this.user, @required this.onPost});
+  AddCommentModal({@required this.user, @required this.onPost});
 
   @override
-  _AddCommentWidgetState createState() => _AddCommentWidgetState();
+  _AddCommentModalState createState() => _AddCommentModalState();
 }
 
-class _AddCommentWidgetState extends State<AddCommentWidget> {
+class _AddCommentModalState extends State<AddCommentModal> {
   final _textController = TextEditingController();
   bool _canPost = false;
 
@@ -339,7 +288,7 @@ class _AddCommentWidgetState extends State<AddCommentWidget> {
   Widget build(BuildContext context) {
     return Row(
       children: <Widget>[
-        AvatarWidget(imageUrl: widget.user.imageUrl),
+        AvatarWidget(user: widget.user),
         Expanded(
           child: TextField(
             controller: _textController,
@@ -355,7 +304,8 @@ class _AddCommentWidgetState extends State<AddCommentWidget> {
             opacity: _canPost ? 1.0 : 0.4,
             child: Text('Post', style: TextStyle(color: Colors.blue)),
           ),
-          onPressed: _canPost ? widget.onPost : null,
+          onPressed:
+              _canPost ? () => widget.onPost(_textController.text) : null,
         )
       ],
     );
