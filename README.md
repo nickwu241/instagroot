@@ -4,7 +4,7 @@ Instagram clone for Groot created using Flutter! I'm currently working on this w
 
 ## Current Status
 
-![day 1 progress](status_updates/day1.gif)
+![day 4 progress](status_updates/day4.gif)
 
 ## Picture Credits
 
