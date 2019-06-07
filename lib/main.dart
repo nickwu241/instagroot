@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:outline_material_icons/outline_material_icons.dart';
-import 'package:instagroot/models.dart';
-import 'package:instagroot/post_widget.dart';
-import 'package:instagroot/avatar_widget.dart';
+import 'package:instagroot/home_feed_page.dart';
 import 'package:instagroot/ui_utils.dart';
 
 void main() => runApp(MyApp());
@@ -28,6 +26,7 @@ class MainScaffold extends StatefulWidget {
 }
 
 class _MainScaffoldState extends State<MainScaffold> {
+  static const _kAddPhotoTabIndex = 2;
   int _tabSelectedIndex = 0;
 
   // Save the home page scrolling offset,
@@ -61,11 +60,32 @@ class _MainScaffoldState extends State<MainScaffold> {
     }
   }
 
-  void _onTabTapped(int index) {
-    setState(() => _tabSelectedIndex = index);
-    if (index == _tabSelectedIndex) {
+  void _onTabTapped(BuildContext context, int index) {
+    if (index == _kAddPhotoTabIndex) {
+      showSnackbar(context, 'Add Photo');
+    } else if (index == _tabSelectedIndex) {
       _scrollToTop();
+    } else {
+      setState(() => _tabSelectedIndex = index);
     }
+  }
+
+  Widget _buildPlaceHolderTab(String tabName) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 64.0),
+        child: Column(
+          children: <Widget>[
+            Text(
+              'Oops, the $tabName tab is\n under construction!',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 28.0),
+            ),
+            Image.asset('assets/images/building.gif'),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildBody() {
@@ -75,13 +95,20 @@ class _MainScaffoldState extends State<MainScaffold> {
             ScrollController(initialScrollOffset: _lastFeedScrollOffset);
         return HomeFeedPage(scrollController: _scrollController);
       default:
+        const tabIndexToNameMap = {
+          0: 'Home',
+          1: 'Search',
+          2: 'Add Photo',
+          3: 'Notifications',
+          4: 'Profile',
+        };
         _disposeScrollController();
-        return Placeholder();
+        return _buildPlaceHolderTab(tabIndexToNameMap[_tabSelectedIndex]);
     }
   }
 
   // Unselected tabs are outline icons, while the selected tab should be solid.
-  List<BottomNavigationBarItem> _buildBottomNavigationItems() {
+  Widget _buildBottomNavigation() {
     const unselectedIcons = <IconData>[
       OMIcons.home,
       Icons.search,
@@ -96,11 +123,21 @@ class _MainScaffoldState extends State<MainScaffold> {
       Icons.favorite,
       Icons.person,
     ];
-    return List.generate(5, (int i) {
+    final bottomNaivgationItems = List.generate(5, (int i) {
       final iconData =
           _tabSelectedIndex == i ? selecteedIcons[i] : unselectedIcons[i];
       return BottomNavigationBarItem(icon: Icon(iconData), title: Container());
     }).toList();
+
+    return Builder(builder: (BuildContext context) {
+      return BottomNavigationBar(
+        iconSize: 32.0,
+        type: BottomNavigationBarType.fixed,
+        items: bottomNaivgationItems,
+        currentIndex: _tabSelectedIndex,
+        onTap: (int i) => _onTabTapped(context, i),
+      );
+    });
   }
 
   @override
@@ -111,7 +148,12 @@ class _MainScaffoldState extends State<MainScaffold> {
         backgroundColor: Colors.grey[50],
         title: Row(
           children: <Widget>[
-            Icon(OMIcons.cameraAlt, color: Colors.black, size: 32.0),
+            Builder(builder: (BuildContext context) {
+              return GestureDetector(
+                child: Icon(OMIcons.cameraAlt, color: Colors.black, size: 32.0),
+                onTap: () => showSnackbar(context, 'Add Photo'),
+              );
+            }),
             SizedBox(width: 12.0),
             GestureDetector(
               child: Text(
@@ -143,113 +185,7 @@ class _MainScaffoldState extends State<MainScaffold> {
         ],
       ),
       body: _buildBody(),
-      bottomNavigationBar: BottomNavigationBar(
-        iconSize: 32.0,
-        type: BottomNavigationBarType.fixed,
-        items: _buildBottomNavigationItems(),
-        currentIndex: _tabSelectedIndex,
-        onTap: _onTabTapped,
-      ),
-    );
-  }
-}
-
-class HomeFeedPage extends StatefulWidget {
-  final ScrollController scrollController;
-
-  HomeFeedPage({this.scrollController});
-
-  @override
-  _HomeFeedPageState createState() => _HomeFeedPageState();
-}
-
-class _HomeFeedPageState extends State<HomeFeedPage> {
-  final _posts = <Post>[
-    Post(
-      user: grootlover,
-      imageUrls: [
-        'assets/images/groot1.jpg',
-        'assets/images/groot4.jpg',
-        'assets/images/groot5.jpg',
-      ],
-      likes: [Like(user: rocket), Like(user: starlord), Like(user: gamora)],
-      comments: [
-        Comment(
-          text: 'So we’re saving the galaxy again? #gotg',
-          user: rocket,
-          commentedAt: DateTime(2019, 5, 4, 14, 35, 0),
-          likes: [],
-        ),
-      ],
-      location: 'Earth',
-      postedAt: DateTime(2019, 5, 4, 12, 35, 0),
-    ),
-    Post(
-      user: nickwu241,
-      imageUrls: ['assets/images/groot2.jpg'],
-      likes: [Like(user: nickwu241)],
-      comments: [],
-      location: 'Knowhere',
-      postedAt: DateTime(2019, 5, 3, 6, 0, 0),
-    ),
-    Post(
-      user: nebula,
-      imageUrls: ['assets/images/groot6.jpg'],
-      likes: [Like(user: nickwu241)],
-      comments: [],
-      location: 'Nine Realms',
-      postedAt: DateTime(2019, 5, 2, 0, 0, 0),
-    ),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      itemBuilder: (ctx, i) {
-        if (i == 0) {
-          return StoriesBarWidget();
-        }
-        return PostWidget(_posts[i - 1]);
-      },
-      itemCount: _posts.length + 1,
-      controller: widget.scrollController,
-    );
-  }
-}
-
-class StoriesBarWidget extends StatelessWidget {
-  final _users = <User>[
-    currentUser,
-    grootlover,
-    rocket,
-    nebula,
-    starlord,
-    gamora,
-  ];
-
-  void _onUserStoryTap(BuildContext context, int i) {
-    final message =
-        i == 0 ? 'Add to Your Story' : "View ${grootlover.name}'s Story";
-    showSnackbar(context, message);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 106.0,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemBuilder: (ctx, i) {
-          return AvatarWidget(
-            user: _users[i],
-            onTap: () => _onUserStoryTap(context, i),
-            isLarge: true,
-            isShowingUsernameLabel: true,
-            isCurrentUserStory: i == 0,
-          );
-        },
-        itemCount: _users.length,
-      ),
+      bottomNavigationBar: _buildBottomNavigation(),
     );
   }
 }

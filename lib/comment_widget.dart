@@ -42,19 +42,22 @@ class _CommentWidgetState extends State<CommentWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: <Widget>[
-        _buildRichText(),
-        Spacer(),
-        Padding(
-          padding: const EdgeInsets.only(right: 16.0),
-          child: HeartIconAnimator(
-            isLiked: widget.comment.isLikedBy(currentUser),
-            size: 16.0,
-            onTap: _toggleIsLiked,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6.0),
+      child: Row(
+        children: <Widget>[
+          _buildRichText(),
+          Spacer(),
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: HeartIconAnimator(
+              isLiked: widget.comment.isLikedBy(currentUser),
+              size: 14.0,
+              onTap: _toggleIsLiked,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
