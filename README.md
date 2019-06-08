@@ -3,8 +3,6 @@
 Instagram clone for Groot created using Flutter!
 Demo App is available on [Google Play Store](https://play.google.com/store/apps/details?id=wu.nick.instagroot).
 
-## Current Status
-
 ![Demo GIF](status_updates/day5.gif)
 
 ## Picture Credits
