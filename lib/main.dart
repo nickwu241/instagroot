@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:outline_material_icons/outline_material_icons.dart';
 import 'package:instagroot/home_feed_page.dart';
 import 'package:instagroot/ui_utils.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
+      .then((_) {
+    runApp(new MyApp());
+  });
+}
 
 class MyApp extends StatelessWidget {
   @override
