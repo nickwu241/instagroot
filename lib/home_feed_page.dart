@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:instagroot/avatar_widget.dart';
+import 'package:instagroot/data.dart';
 import 'package:instagroot/post_widget.dart';
-import 'package:instagroot/models.dart';
 import 'package:instagroot/ui_utils.dart';
 
 class HomeFeedPage extends StatefulWidget {
@@ -14,48 +14,7 @@ class HomeFeedPage extends StatefulWidget {
 }
 
 class _HomeFeedPageState extends State<HomeFeedPage> {
-  final _posts = <Post>[
-    Post(
-      user: grootlover,
-      imageUrls: [
-        'assets/images/groot1.jpg',
-        'assets/images/groot4.jpg',
-        'assets/images/groot5.jpg',
-      ],
-      likes: [
-        Like(user: rocket),
-        Like(user: starlord),
-        Like(user: gamora),
-        Like(user: nickwu241),
-      ],
-      comments: [
-        Comment(
-          text: 'So we’re saving the galaxy again? #gotg',
-          user: rocket,
-          commentedAt: DateTime(2019, 5, 23, 14, 35, 0),
-          likes: [Like(user: nickwu241)],
-        ),
-      ],
-      location: 'Earth',
-      postedAt: DateTime(2019, 5, 23, 12, 35, 0),
-    ),
-    Post(
-      user: nickwu241,
-      imageUrls: ['assets/images/groot2.jpg'],
-      likes: [],
-      comments: [],
-      location: 'Knowhere',
-      postedAt: DateTime(2019, 5, 21, 6, 0, 0),
-    ),
-    Post(
-      user: nebula,
-      imageUrls: ['assets/images/groot6.jpg'],
-      likes: [Like(user: nickwu241)],
-      comments: [],
-      location: 'Nine Realms',
-      postedAt: DateTime(2019, 5, 2, 0, 0, 0),
-    ),
-  ];
+  final _posts = Data.getPostsForHomeFeed();
 
   @override
   Widget build(BuildContext context) {
@@ -73,14 +32,9 @@ class _HomeFeedPageState extends State<HomeFeedPage> {
 }
 
 class StoriesBarWidget extends StatelessWidget {
-  final _users = <User>[
-    currentUser,
-    grootlover,
-    rocket,
-    nebula,
-    starlord,
-    gamora,
-  ];
+  final _users = [Data.getCurrentUser()]
+      .followedBy(Data.getCurrentUser().following)
+      .toList();
 
   void _onUserStoryTap(BuildContext context, int i) {
     final message =

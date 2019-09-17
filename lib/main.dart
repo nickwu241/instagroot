@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:outline_material_icons/outline_material_icons.dart';
 import 'package:instagroot/home_feed_page.dart';
 import 'package:instagroot/ui_utils.dart';
+import 'package:outline_material_icons/outline_material_icons.dart';
 
 void main() {
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
@@ -18,7 +18,6 @@ class MyApp extends StatelessWidget {
       title: 'Instagroot',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blueGrey,
         primaryColor: Colors.black,
       ),
       home: MainScaffold(),
@@ -130,9 +129,11 @@ class _MainScaffoldState extends State<MainScaffold> {
       Icons.person,
     ];
     final bottomNaivgationItems = List.generate(5, (int i) {
-      final iconData =
-          _tabSelectedIndex == i ? selecteedIcons[i] : unselectedIcons[i];
-      return BottomNavigationBarItem(icon: Icon(iconData), title: Container());
+      return BottomNavigationBarItem(
+        icon: Icon(unselectedIcons[i]),
+        activeIcon: Icon(selecteedIcons[i]),
+        title: Container(),
+      );
     }).toList();
 
     return Builder(builder: (BuildContext context) {

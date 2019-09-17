@@ -1,33 +1,6 @@
 import 'package:meta/meta.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
-const placeholderStories = <Story>[Story()];
-
-const nickwu241 =
-    User(name: 'nickwu241', imageUrl: 'assets/images/nickwu241.jpg');
-const grootlover = User(
-    name: 'grootlover',
-    imageUrl: 'assets/images/grootlover.jpg',
-    stories: placeholderStories);
-const starlord = User(
-    name: 'starlord',
-    imageUrl: 'assets/images/starlord.jpg',
-    stories: placeholderStories);
-const gamora = User(
-    name: 'gamora',
-    imageUrl: 'assets/images/gamora.jpg',
-    stories: placeholderStories);
-const rocket = User(
-    name: 'rocket',
-    imageUrl: 'assets/images/rocket.jpg',
-    stories: placeholderStories);
-const nebula = User(
-    name: 'nebula',
-    imageUrl: 'assets/images/nebula.jpg',
-    stories: placeholderStories);
-
-const currentUser = nickwu241;
-
 class Post {
   List<String> imageUrls;
   final User user;
@@ -37,9 +10,8 @@ class Post {
   List<Comment> comments;
   String location;
 
-  String timeAgo() {
-    final now = DateTime.now();
-    return timeago.format(now.subtract(now.difference(postedAt)));
+  String get timeAgo {
+    return timeago.format(postedAt);
   }
 
   bool isLikedBy(User user) {
@@ -72,14 +44,15 @@ class Post {
 
 class User {
   final String name;
-
-  final String imageUrl;
+  final String profileImageUrl;
   final List<Story> stories;
+  final List<User> following;
 
   const User({
     @required this.name,
-    this.imageUrl,
-    this.stories = const <Story>[],
+    @required this.profileImageUrl,
+    @required this.stories,
+    @required this.following,
   });
 }
 
@@ -87,7 +60,7 @@ class Comment {
   String text;
   final User user;
   final DateTime commentedAt;
-  List<Like> likes;
+  final List<Like> likes;
 
   bool isLikedBy(User user) {
     return likes.any((like) => like.user.name == user.name);

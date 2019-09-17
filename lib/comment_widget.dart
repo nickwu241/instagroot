@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:instagroot/data.dart';
 import 'package:instagroot/heart_icon_animator.dart';
 import 'package:instagroot/models.dart';
 import 'package:instagroot/ui_utils.dart';
@@ -14,7 +15,7 @@ class CommentWidget extends StatefulWidget {
 
 class _CommentWidgetState extends State<CommentWidget> {
   void _toggleIsLiked() {
-    setState(() => widget.comment.toggleLikeFor(currentUser));
+    setState(() => widget.comment.toggleLikeFor(Data.getCurrentUser()));
   }
 
   Text _buildRichText() {
@@ -51,7 +52,7 @@ class _CommentWidgetState extends State<CommentWidget> {
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: HeartIconAnimator(
-              isLiked: widget.comment.isLikedBy(currentUser),
+              isLiked: widget.comment.isLikedBy(Data.getCurrentUser()),
               size: 14.0,
               onTap: _toggleIsLiked,
             ),

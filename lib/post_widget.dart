@@ -1,14 +1,15 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-import 'package:instagroot/heart_icon_animator.dart';
-import 'package:instagroot/heart_overlay_animator.dart';
-import 'package:outline_material_icons/outline_material_icons.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:instagroot/models.dart';
+import 'package:flutter/material.dart';
 import 'package:instagroot/avatar_widget.dart';
 import 'package:instagroot/comment_widget.dart';
+import 'package:instagroot/data.dart';
+import 'package:instagroot/heart_icon_animator.dart';
+import 'package:instagroot/heart_overlay_animator.dart';
+import 'package:instagroot/models.dart';
 import 'package:instagroot/ui_utils.dart';
+import 'package:outline_material_icons/outline_material_icons.dart';
 
 class PostWidget extends StatefulWidget {
   final Post post;
@@ -20,6 +21,7 @@ class PostWidget extends StatefulWidget {
 }
 
 class _PostWidgetState extends State<PostWidget> {
+  final currentUser = Data.getCurrentUser();
   final StreamController<void> _doubleTapImageEvents =
       StreamController.broadcast();
   bool _isSaved = false;
@@ -210,7 +212,7 @@ class _PostWidgetState extends State<PostWidget> {
               ),
               // Posted Timestamp
               Text(
-                widget.post.timeAgo(),
+                widget.post.timeAgo,
                 style: TextStyle(color: Colors.grey, fontSize: 11.0),
               ),
             ],

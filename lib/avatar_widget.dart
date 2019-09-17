@@ -60,7 +60,7 @@ class AvatarWidget extends StatelessWidget {
                   decoration: _greyBoxShadowDecoration,
                   child: CircleAvatar(
                     radius: radius,
-                    backgroundImage: AssetImage(user.imageUrl),
+                    backgroundImage: AssetImage(user.profileImageUrl),
                   ),
                 ),
               ),
