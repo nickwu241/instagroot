@@ -112,37 +112,30 @@ class _MainScaffoldState extends State<MainScaffold> {
     }
   }
 
+  BottomNavigationBarItem _buildBottomNavigationBarItem(
+      IconData icon, IconData activeIcon) {
+    return BottomNavigationBarItem(
+      icon: Icon(icon),
+      activeIcon: Icon(activeIcon),
+      title: Container(),
+    );
+  }
+
   // Unselected tabs are outline icons, while the selected tab should be solid.
   Widget _buildBottomNavigation() {
-    const unselectedIcons = <IconData>[
-      OMIcons.home,
-      Icons.search,
-      OMIcons.addBox,
-      Icons.favorite_border,
-      Icons.person_outline,
-    ];
-    const selecteedIcons = <IconData>[
-      Icons.home,
-      Icons.search,
-      Icons.add_box,
-      Icons.favorite,
-      Icons.person,
-    ];
-    final bottomNaivgationItems = List.generate(5, (int i) {
-      return BottomNavigationBarItem(
-        icon: Icon(unselectedIcons[i]),
-        activeIcon: Icon(selecteedIcons[i]),
-        title: Container(),
-      );
-    }).toList();
-
     return Builder(builder: (BuildContext context) {
       return BottomNavigationBar(
         iconSize: 32.0,
         type: BottomNavigationBarType.fixed,
-        items: bottomNaivgationItems,
         currentIndex: _tabSelectedIndex,
         onTap: (int i) => _onTabTapped(context, i),
+        items: [
+          _buildBottomNavigationBarItem(OMIcons.home, Icons.home),
+          _buildBottomNavigationBarItem(OMIcons.search, Icons.search),
+          _buildBottomNavigationBarItem(OMIcons.addBox, Icons.add_box),
+          _buildBottomNavigationBarItem(OMIcons.favoriteBorder, Icons.favorite),
+          _buildBottomNavigationBarItem(OMIcons.personOutline, Icons.person),
+        ],
       );
     });
   }
